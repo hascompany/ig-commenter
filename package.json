@@ -1,11 +1,12 @@
 {
   "name": "ig-commenter",
   "version": "1.0.0",
+  "type": "module",
   "description": "Instagram caption reader + AI comment generator (All-in-one Express app)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "postinstall": "puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "engines": {
     "node": ">=18"

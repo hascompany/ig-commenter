@@ -126,62 +126,64 @@
     <div class="result" id="out" style="display:none"></div>
   </div>
 
-  <script>
-    const $ = (s) => document.querySelector(s);
-    const go = $('#go');
-    const out = $('#out');
+<script>
+  const $ = (s) => document.querySelector(s);
+  const go = $('#go');
+  const out = $('#out');
 
-    async function generate() {
-      const link = $('#link').value.trim();
-      const count = $('#count').value.trim() || '3';
-      if (!link) return alert('인스타 링크를 입력해주세요.');
+  async function generate() {
+    const link = $('#link').value.trim();
+    const count = $('#count').value.trim() || '3';
+    if (!link) return alert('인스타 링크를 입력해주세요.');
 
-      go.disabled = true;
-      go.textContent = '생성 중…';
-      out.style.display = 'block';
-      out.textContent = '⏳ 캡션 읽는 중…';
+    go.disabled = true;
+    go.textContent = '생성 중…';
+    out.style.display = 'block';
+    out.textContent = '⏳ 캡션 읽는 중…';
 
-      try {
-        const res = await fetch('/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ link, count })
-        });
-        const data = await res.json();
+    try {
+      // 👇 여기에서 절대주소로 변경
+      const res = await fetch('https://ig-commenter.onrender.com/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link, count })
+      });
+      const data = await res.json();
 
-        if (!data.ok) {
-          out.textContent = '❌ ' + (data.error || '오류가 발생했습니다.');
-          return;
-        }
-
-        const { caption, comments } = data;
-
-        out.innerHTML = `
-          <div>
-            <span class="tag">캡션</span>
-            <div class="caption">${caption.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</div>
-          </div>
-          <div style="margin-top:12px;">
-            <span class="tag">생성 댓글 (${comments.length}개)</span>
-            <ol class="list">
-              ${comments.map(c => `
-                <li>${c.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}
-                  <div class="actions">
-                    <button onclick="navigator.clipboard.writeText('${c.replace(/'/g, "\\'")}')">복사</button>
-                  </div>
-                </li>`).join('')}
-            </ol>
-          </div>
-        `;
-      } catch (e) {
-        out.textContent = '❌ 네트워크/서버 오류: ' + e.message;
-      } finally {
-        go.disabled = false;
-        go.textContent = '생성하기';
+      if (!data.ok) {
+        out.textContent = '❌ ' + (data.error || '오류가 발생했습니다.');
+        return;
       }
-    }
 
-    go.addEventListener('click', generate);
-  </script>
+      const { caption, comments } = data;
+
+      out.innerHTML = `
+        <div>
+          <span class="tag">캡션</span>
+          <div class="caption">${caption.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</div>
+        </div>
+        <div style="margin-top:12px;">
+          <span class="tag">생성 댓글 (${comments.length}개)</span>
+          <ol class="list">
+            ${comments.map(c => `
+              <li>${c.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}
+                <div class="actions">
+                  <button onclick="navigator.clipboard.writeText('${c.replace(/'/g, "\\'")}')">복사</button>
+                </div>
+              </li>`).join('')}
+          </ol>
+        </div>
+      `;
+    } catch (e) {
+      out.textContent = '❌ 네트워크/서버 오류: ' + e.message;
+    } finally {
+      go.disabled = false;
+      go.textContent = '생성하기';
+    }
+  }
+
+  go.addEventListener('click', generate);
+</script>
+
 </body>
 </html>
