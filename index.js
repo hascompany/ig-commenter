@@ -21,15 +21,23 @@ function extractShortcode(link) {
 async function fetchCaptionFromInstagram(link) {
   const shortcode = extractShortcode(link);
   if (!shortcode) throw new Error('유효한 인스타그램 링크가 아닙니다.');
-  const url = `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`;
+
+  const url = `https://www.instagram.com/p/${shortcode}/`;
   const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) throw new Error('캡션을 불러올 수 없습니다.');
-  const data = await res.json();
-  const caption =
-    data?.graphql?.shortcode_media?.edge_media_to_caption?.edges?.[0]?.node?.text ||
-    '캡션 없음';
-  return caption.replace(/\s+/g, ' ').trim();
+
+  const html = await res.text();
+  const match = html.match(/<meta property="og:description" content="([^"]+)"/);
+  if (!match) throw new Error('캡션 메타태그를 찾을 수 없습니다.');
+
+  // og:description 안에는 "작성자 이름: 캡션 내용" 형태로 들어있음
+  let caption = match[1];
+  const parts = caption.split(':');
+  caption = parts.length > 1 ? parts.slice(1).join(':').trim() : caption.trim();
+
+  return caption;
 }
+
 
 // AI 댓글 생성
 async function generateComments({ caption, count }) {
