@@ -11,13 +11,13 @@ app.use(express.static('views'));
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// 📌 인스타 링크에서 shortcode 추출
+// 인스타 링크에서 shortcode 추출
 function extractShortcode(link) {
   const m = link.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/i);
   return m ? m[1] : null;
 }
 
-// 📌 캡션 추출 (메타태그 기반)
+// 캡션 추출 (og:description 메타)
 async function fetchCaptionFromInstagram(link) {
   const shortcode = extractShortcode(link);
   if (!shortcode) throw new Error('유효한 인스타그램 링크가 아닙니다.');
@@ -31,10 +31,11 @@ async function fetchCaptionFromInstagram(link) {
   if (!match) throw new Error('캡션 메타태그를 찾을 수 없습니다.');
 
   let caption = match[1];
+  // 종종 'username: 내용' 형식이라 ':' 뒤만 사용
   const parts = caption.split(':');
   caption = parts.length > 1 ? parts.slice(1).join(':').trim() : caption.trim();
 
-  // 🔹 HTML 엔티티 디코딩 (10진 + 16진)
+  // HTML 엔티티 디코딩
   const decode = (str) =>
     str
       .replace(/&quot;/g, '"')
@@ -50,10 +51,12 @@ async function fetchCaptionFromInstagram(link) {
   return decode(caption);
 }
 
-// 📌 AI 댓글 생성 (최종 v9 프롬프트 반영)
+// AI 댓글 생성 (v10 프롬프트)
 async function generateComments({ caption, count }) {
-  const systemPrompt = `
-Write ${count} natural Korean Instagram comments reacting to this caption:
+  const n = Math.max(1, Math.min(parseInt(count || '5', 10), 50));
+
+  const prompt = `
+Write ${n} natural Korean Instagram comments reacting to this caption:
 
 ${caption}
 
@@ -62,39 +65,41 @@ Rules:
 - Vary sentence length: about half one sentence, half two sentences.
 - Avoid excessive punctuation or exclamation marks.
 - About 40% of comments may include emojis naturally if it suits the mood.
-`;
+`.trim();
 
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [{ role: 'system', content: systemPrompt }],
-    temperature: 0.9,
+    messages: [{ role: 'system', content: prompt }],
+    temperature: 0.9
   });
 
   const text = resp.choices?.[0]?.message?.content?.trim() || '';
-  return text
-    .split(/\r?\n|\d+\.\s+/)
-
-    .map((l) => l.replace(/^\d+[\).\s-]*/, '').trim()) // 🔹 넘버링 제거
+  // 줄분리: 개행, 숫자목록(1. 2.), 하이픈 목록(- )
+  const lines = text
+    .split(/\r?\n|\d+\.\s+|^- /gm)
+    .map((l) => l.replace(/^\s*[-•]\s*/, '').replace(/^\d+[\).\s-]*/, '').trim())
     .filter(Boolean);
+
+  return lines.slice(0, n);
 }
 
-
-// 📌 기본 페이지
+// 기본 페이지
 app.get('/', (_req, res) => res.sendFile('index.html', { root: './views' }));
 
-// 📌 댓글 생성 요청
+// 댓글 생성 API
 app.post('/generate', async (req, res) => {
   try {
     const { link, count } = req.body;
     if (!link) return res.status(400).json({ ok: false, error: '링크를 입력하세요.' });
+
     const caption = await fetchCaptionFromInstagram(link);
     const comments = await generateComments({ caption, count });
-    res.json({ ok: true, caption, comments });
+    return res.json({ ok: true, caption, comments });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ ok: false, error: err.message || '서버 오류' });
+    return res.status(500).json({ ok: false, error: err.message || '서버 오류' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // Render free 기본 포트 대응
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
