@@ -27,7 +27,7 @@
     h2 {
       color: #2ecc71;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       font-size: 20px;
       display: flex;
       justify-content: center;
@@ -47,25 +47,35 @@
       padding: 10px;
     }
 
-    #link { flex: 2; min-width: 160px; }
-    #count { width: 80px; text-align: center; }
+    #link {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    #count {
+      flex: 1;
+      min-width: 80px;
+      max-width: 120px;
+      text-align: center;
+    }
+
     #generate {
-      flex: none;
+      flex: 2;
       background: #2ecc71;
       color: white;
       border: none;
       font-weight: 600;
-      padding: 10px 14px;
       cursor: pointer;
+      transition: background 0.2s ease;
     }
-    #generate:hover { background: #27ae60; }
 
-    .inline {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+    #generate:hover { background: #27ae60; }
 
     #caption-preview {
       white-space: pre-line;
@@ -135,8 +145,8 @@
       input, button { font-size: 13px; padding: 9px; }
       #result { font-size: 13.5px; line-height: 1.7; }
       #caption-preview { font-size: 12.5px; }
-      .inline { flex-direction: column; align-items: stretch; }
-      #generate { width: 100%; margin-top: 4px; }
+      .row { flex-direction: column; }
+      #generate { width: 100%; }
     }
   </style>
 </head>
@@ -144,9 +154,12 @@
   <div class="container">
     <h2>인블로그 댓글 생성기</h2>
 
-    <div class="inline">
-      <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
-      <input id="count" type="number" min="1" max="20" placeholder="댓글 수" />
+    <!-- 링크 입력 -->
+    <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
+
+    <!-- 댓글 수 + 생성 버튼 -->
+    <div class="row">
+      <input id="count" type="number" min="1" max="50" placeholder="댓글 수" />
       <button id="generate">댓글 생성</button>
     </div>
 
@@ -192,7 +205,6 @@
       if (lines.length > 5) captionBox.textContent += "\n...";
 
       resultBox.textContent = data.comments.join("\n");
-
       copyBtn.style.display = "block";
     };
 
