@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Instagram Comment Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:#0b0b0c;
+      color:#eaeaea;
+      margin:0;
+      padding:0;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 24px;
+      background:#131316;
+      border:1px solid #2a2a2e;
+      border-radius:16px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0 0 16px;
+    }
+    label {
+      display:block;
+      margin-top:12px;
+      margin-bottom:6px;
+      color:#cfcfd4;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      border-radius:10px;
+      border:1px solid #2a2a2e;
+      background:#0f0f12;
+      color:#eaeaea;
+    }
+    input:focus {
+      outline: 2px solid #4b89ff;
+      border-color:#4b89ff;
+    }
+    button {
+      background:#4b89ff;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button:disabled {
+      opacity: .6;
+      cursor:not-allowed;
+    }
+    .row {
+      display:grid;
+      grid-template-columns: 1fr 160px;
+      gap:12px;
+    }
+    .muted {
+      color:#9b9ba1;
+      font-size:12px;
+      margin-top:6px;
+    }
+    .result {
+      margin-top:16px;
+      padding:16px;
+      background:#0f0f12;
+      border:1px solid #2a2a2e;
+      border-radius:12px;
+      white-space:pre-wrap;
+    }
+    .tag {
+      font-size:12px;
+      background:#1c1c22;
+      padding:4px 8px;
+      border-radius:999px;
+      display:inline-block;
+      margin-right:6px;
+      color:#cfcfd4;
+      border:1px solid #2a2a2e;
+    }
+    .caption {
+      margin-top:10px;
+      padding:12px;
+      background:#101015;
+      border:1px dashed #2a2a2e;
+      border-radius:10px;
+      color:#cfcfd4;
+    }
+    .list li {
+      margin:10px 0;
+      padding:10px;
+      background:#101015;
+      border-radius:10px;
+      border:1px solid #26262b;
+    }
+    .actions {
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>AI Instagram Comment Generator</h1>
+    <p class="muted">인스타 링크를 붙여 넣고, 원하는 댓글 수량을 입력하세요.<br>
+    캡션을 자동으로 읽고 한국어 댓글을 생성합니다.</p>
+
+    <label>인스타그램 링크</label>
+    <input id="link" placeholder="https://www.instagram.com/p/XXXXXXXXX/" />
+
+    <div class="row">
+      <div>
+        <label>댓글 수량</label>
+        <input id="count" type="number" value="3" min="1" max="10" />
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="go">생성하기</button>
+      </div>
+    </div>
+
+    <div class="result" id="out" style="display:none"></div>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const go = $('#go');
+    const out = $('#out');
+
+    async function generate() {
+      const link = $('#link').value.trim();
+      const count = $('#count').value.trim() || '3';
+      if (!link) return alert('인스타 링크를 입력해주세요.');
+
+      go.disabled = true;
+      go.textContent = '생성 중…';
+      out.style.display = 'block';
+      out.textContent = '⏳ 캡션 읽는 중…';
+
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ link, count })
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          out.textContent = '❌ ' + (data.error || '오류가 발생했습니다.');
+          return;
+        }
+
+        const { caption, comments } = data;
+
+        out.innerHTML = `
+          <div>
+            <span class="tag">캡션</span>
+            <div class="caption">${caption.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</div>
+          </div>
+          <div style="margin-top:12px;">
+            <span class="tag">생성 댓글 (${comments.length}개)</span>
+            <ol class="list">
+              ${comments.map(c => `
+                <li>${c.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}
+                  <div class="actions">
+                    <button onclick="navigator.clipboard.writeText('${c.replace(/'/g, "\\'")}')">복사</button>
+                  </div>
+                </li>`).join('')}
+            </ol>
+          </div>
+        `;
+      } catch (e) {
+        out.textContent = '❌ 네트워크/서버 오류: ' + e.message;
+      } finally {
+        go.disabled = false;
+        go.textContent = '생성하기';
+      }
+    }
+
+    go.addEventListener('click', generate);
+  </script>
+</body>
+</html>
