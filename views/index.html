@@ -3,59 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Instagram 댓글 생성기</title>
+  <title>인블로그 댓글 생성기</title>
   <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; }
     body {
       font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
-      background: #f7f9f8;
-      color: #222;
+      background: #f8faf8;
       margin: 0;
       padding: 0;
+      color: #222;
     }
 
     .container {
       max-width: 640px;
-      margin: 60px auto;
+      margin: 40px auto;
       background: #fff;
-      border-radius: 18px;
-      padding: 32px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      border-radius: 16px;
+      padding: 24px 20px 32px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
     }
 
     h2 {
       color: #2ecc71;
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    h2::before {
+      content: "💬";
+      font-size: 20px;
     }
 
     input, button {
-      font-size: 15px;
+      font-size: 14px;
       border-radius: 8px;
       border: 1px solid #ddd;
-      padding: 12px;
+      padding: 10px;
     }
 
-    #link { width: 100%; margin-bottom: 12px; }
+    #link { flex: 2; min-width: 160px; }
+    #count { width: 80px; text-align: center; }
+    #generate {
+      flex: none;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    #generate:hover { background: #27ae60; }
 
     .inline {
       display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-
-    #count { flex: 1; }
-    #generate { flex: 1; background: #2ecc71; color: white; border: none; font-weight: 600; cursor: pointer; }
-    #generate:hover { background: #27ae60; }
 
     #caption-preview {
       white-space: pre-line;
-      color: #666;
-      font-size: 14px;
+      color: #555;
+      font-size: 13px;
       line-height: 1.6;
-      margin: 10px 0 16px;
+      margin: 18px 0 12px;
       background: #f8f9fa;
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 12px;
     }
 
     #result {
@@ -63,11 +83,12 @@
       background: #f9fdfb;
       border: 1px solid #e1f5e9;
       border-radius: 10px;
-      padding: 18px;
+      padding: 14px 16px;
       line-height: 1.8;
-      font-size: 15px;
+      font-size: 14px;
       min-height: 100px;
       box-shadow: 0 2px 6px rgba(46,204,113,0.05);
+      overflow-wrap: break-word;
     }
 
     #copyAll {
@@ -77,25 +98,63 @@
       font-weight: 600;
       cursor: pointer;
       width: 100%;
-      margin-top: 16px;
-      padding: 14px;
+      margin-top: 14px;
+      padding: 12px;
       border-radius: 8px;
+      font-size: 14px;
     }
+
     #copyAll:hover { background: #13856b; }
+
+    .footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* ⚡ 스켈레톤 로딩 */
+    .skeleton-line {
+      height: 12px;
+      margin: 6px 0;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #ececec 25%, #f6f6f6 50%, #ececec 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+
+    /* 📱 모바일 반응형 */
+    @media (max-width: 480px) {
+      .container { margin: 20px 10px; padding: 20px 16px 28px; }
+      h2 { font-size: 18px; }
+      input, button { font-size: 13px; padding: 9px; }
+      #result { font-size: 13.5px; line-height: 1.7; }
+      #caption-preview { font-size: 12.5px; }
+      .inline { flex-direction: column; align-items: stretch; }
+      #generate { width: 100%; margin-top: 4px; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>💬 Instagram 댓글 생성기</h2>
-    <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
+    <h2>인블로그 댓글 생성기</h2>
+
     <div class="inline">
-      <input id="count" type="number" min="1" max="20" placeholder="댓글 수 입력" />
+      <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
+      <input id="count" type="number" min="1" max="20" placeholder="댓글 수" />
       <button id="generate">댓글 생성</button>
     </div>
 
     <div id="caption-preview"></div>
-    <div id="result">결과가 여기에 표시됩니다.</div>
+    <div id="result">댓글이 여기에 표시됩니다.</div>
     <button id="copyAll" style="display:none;">모든 댓글 복사</button>
+
+    <div class="footer">© 2025 인블로그 AI Comment System</div>
   </div>
 
   <script>
@@ -107,7 +166,12 @@
     genBtn.onclick = async () => {
       const link = document.getElementById("link").value.trim();
       const count = document.getElementById("count").value || 5;
-      resultBox.textContent = "⏳ 댓글 생성 중...";
+      resultBox.innerHTML = `
+        <div class="skeleton-line" style="width:90%;"></div>
+        <div class="skeleton-line" style="width:85%;"></div>
+        <div class="skeleton-line" style="width:70%;"></div>
+        <div class="skeleton-line" style="width:95%;"></div>
+      `;
       captionBox.textContent = "";
       copyBtn.style.display = "none";
 
@@ -123,12 +187,10 @@
         return;
       }
 
-      // 캡션 5줄까지만 표시
       const lines = data.caption.split("\n");
       captionBox.textContent = lines.slice(0, 5).join("\n");
       if (lines.length > 5) captionBox.textContent += "\n...";
 
-      // 한 칸에 줄바꿈 포함 출력
       resultBox.textContent = data.comments.join("\n");
 
       copyBtn.style.display = "block";
