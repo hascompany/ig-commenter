@@ -72,7 +72,8 @@ Rules:
 
   const text = resp.choices?.[0]?.message?.content?.trim() || '';
   return text
-    .split(/\r?\n/)
+    .split(/\r?\n|\d+\.\s+/)
+
     .map((l) => l.replace(/^\d+[\).\s-]*/, '').trim()) // 🔹 넘버링 제거
     .filter(Boolean);
 }
