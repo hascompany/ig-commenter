@@ -1,189 +1,80 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI Instagram Comment Generator</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instagram Comment Generator</title>
   <style>
-    body {
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:#0b0b0c;
-      color:#eaeaea;
-      margin:0;
-      padding:0;
-    }
-    .wrap {
-      max-width: 720px;
-      margin: 40px auto;
-      padding: 24px;
-      background:#131316;
-      border:1px solid #2a2a2e;
-      border-radius:16px;
-    }
-    h1 {
-      font-size: 22px;
-      margin: 0 0 16px;
-    }
-    label {
-      display:block;
-      margin-top:12px;
-      margin-bottom:6px;
-      color:#cfcfd4;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      border-radius:10px;
-      border:1px solid #2a2a2e;
-      background:#0f0f12;
-      color:#eaeaea;
-    }
-    input:focus {
-      outline: 2px solid #4b89ff;
-      border-color:#4b89ff;
-    }
-    button {
-      background:#4b89ff;
-      border:none;
-      cursor:pointer;
-      font-weight:600;
-    }
-    button:disabled {
-      opacity: .6;
-      cursor:not-allowed;
-    }
-    .row {
-      display:grid;
-      grid-template-columns: 1fr 160px;
-      gap:12px;
-    }
-    .muted {
-      color:#9b9ba1;
-      font-size:12px;
-      margin-top:6px;
-    }
-    .result {
-      margin-top:16px;
-      padding:16px;
-      background:#0f0f12;
-      border:1px solid #2a2a2e;
-      border-radius:12px;
-      white-space:pre-wrap;
-    }
-    .tag {
-      font-size:12px;
-      background:#1c1c22;
-      padding:4px 8px;
-      border-radius:999px;
-      display:inline-block;
-      margin-right:6px;
-      color:#cfcfd4;
-      border:1px solid #2a2a2e;
-    }
-    .caption {
-      margin-top:10px;
-      padding:12px;
-      background:#101015;
-      border:1px dashed #2a2a2e;
-      border-radius:10px;
-      color:#cfcfd4;
-    }
-    .list li {
-      margin:10px 0;
-      padding:10px;
-      background:#101015;
-      border-radius:10px;
-      border:1px solid #26262b;
-    }
-    .actions {
-      display:flex;
-      gap:8px;
-      margin-top:10px;
-    }
+    body { font-family: Pretendard, sans-serif; background:#fafafa; color:#222; margin:0; padding:0; }
+    .container { max-width:600px; margin:40px auto; background:#fff; border-radius:16px; padding:30px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+    h2 { font-weight:600; margin-bottom:20px; text-align:center; }
+    input, select, button { width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:15px; }
+    button { background:#2ecc71; color:#fff; font-weight:600; cursor:pointer; margin-top:10px; border:none; }
+    button:hover { background:#27ae60; }
+    #caption-preview { white-space:pre-line; color:#555; margin:15px 0; font-size:14px; }
+    .comment-box { margin-top:20px; padding:15px; background:#f8f9fa; border-radius:8px; white-space:pre-line; font-size:15px; line-height:1.6; }
+    #copyAll { background:#16a085; }
+    #copyAll:hover { background:#13856b; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>AI Instagram Comment Generator</h1>
-    <p class="muted">인스타 링크를 붙여 넣고, 원하는 댓글 수량을 입력하세요.<br>
-    캡션을 자동으로 읽고 한국어 댓글을 생성합니다.</p>
+  <div class="container">
+    <h2>🧠 Instagram 댓글 생성기</h2>
+    <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
+    <select id="count">
+      <option value="3">3개</option>
+      <option value="5">5개</option>
+      <option value="10" selected>10개</option>
+    </select>
+    <button id="generate">댓글 생성하기</button>
 
-    <label>인스타그램 링크</label>
-    <input id="link" placeholder="https://www.instagram.com/p/XXXXXXXXX/" />
-
-    <div class="row">
-      <div>
-        <label>댓글 수량</label>
-        <input id="count" type="number" value="3" min="1" max="10" />
-      </div>
-      <div>
-        <label>&nbsp;</label>
-        <button id="go">생성하기</button>
-      </div>
-    </div>
-
-    <div class="result" id="out" style="display:none"></div>
+    <div id="caption-preview"></div>
+    <div id="result" class="comment-box"></div>
+    <button id="copyAll" style="display:none;">모든 댓글 복사</button>
   </div>
 
-<script>
-  const $ = (s) => document.querySelector(s);
-  const go = $('#go');
-  const out = $('#out');
+  <script>
+    const genBtn = document.getElementById("generate");
+    const resultBox = document.getElementById("result");
+    const captionBox = document.getElementById("caption-preview");
+    const copyBtn = document.getElementById("copyAll");
 
-  async function generate() {
-    const link = $('#link').value.trim();
-    const count = $('#count').value.trim() || '3';
-    if (!link) return alert('인스타 링크를 입력해주세요.');
+    genBtn.onclick = async () => {
+      const link = document.getElementById("link").value.trim();
+      const count = document.getElementById("count").value;
+      resultBox.textContent = "⏳ 댓글 생성 중...";
+      captionBox.textContent = "";
+      copyBtn.style.display = "none";
 
-    go.disabled = true;
-    go.textContent = '생성 중…';
-    out.style.display = 'block';
-    out.textContent = '⏳ 캡션 읽는 중…';
-
-    try {
-      // 👇 여기에서 절대주소로 변경
-      const res = await fetch('https://ig-commenter.onrender.com/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ link, count })
       });
-      const data = await res.json();
 
+      const data = await res.json();
       if (!data.ok) {
-        out.textContent = '❌ ' + (data.error || '오류가 발생했습니다.');
+        resultBox.textContent = "❌ " + data.error;
         return;
       }
 
-      const { caption, comments } = data;
+      // 캡션 5줄만 표시
+      const lines = data.caption.split("\n");
+      captionBox.textContent = lines.slice(0, 5).join("\n");
+      if (lines.length > 5) captionBox.textContent += "\n...";
 
-      out.innerHTML = `
-        <div>
-          <span class="tag">캡션</span>
-          <div class="caption">${caption.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</div>
-        </div>
-        <div style="margin-top:12px;">
-          <span class="tag">생성 댓글 (${comments.length}개)</span>
-          <ol class="list">
-            ${comments.map(c => `
-              <li>${c.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}
-                <div class="actions">
-                  <button onclick="navigator.clipboard.writeText('${c.replace(/'/g, "\\'")}')">복사</button>
-                </div>
-              </li>`).join('')}
-          </ol>
-        </div>
-      `;
-    } catch (e) {
-      out.textContent = '❌ 네트워크/서버 오류: ' + e.message;
-    } finally {
-      go.disabled = false;
-      go.textContent = '생성하기';
-    }
-  }
+      // 댓글 표시
+      resultBox.textContent = data.comments.join("\n");
 
-  go.addEventListener('click', generate);
-</script>
+      // 복사 버튼 표시
+      copyBtn.style.display = "block";
+    };
 
+    copyBtn.onclick = () => {
+      const text = resultBox.textContent;
+      navigator.clipboard.writeText(text);
+      alert("✅ 모든 댓글이 복사되었습니다!");
+    };
+  </script>
 </body>
 </html>
