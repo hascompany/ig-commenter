@@ -30,13 +30,23 @@ async function fetchCaptionFromInstagram(link) {
   const match = html.match(/<meta property="og:description" content="([^"]+)"/);
   if (!match) throw new Error('캡션 메타태그를 찾을 수 없습니다.');
 
-  // og:description 안에는 "작성자 이름: 캡션 내용" 형태로 들어있음
   let caption = match[1];
   const parts = caption.split(':');
   caption = parts.length > 1 ? parts.slice(1).join(':').trim() : caption.trim();
 
-  return caption;
+  // 🔹 HTML 엔티티를 일반 문자로 변환 (여기 추가)
+  const decode = (str) =>
+    str
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
+
+  return decode(caption);
 }
+
 
 
 // AI 댓글 생성
