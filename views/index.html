@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagram 댓글 생성기</title>
   <style>
-    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    * { box-sizing: border-box; }
     body {
       font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
       background: #f7f9f8;
@@ -17,124 +15,87 @@
 
     .container {
       max-width: 640px;
-      margin: 50px auto;
+      margin: 60px auto;
       background: #fff;
       border-radius: 18px;
-      padding: 32px 28px 40px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-      transition: all 0.3s ease;
+      padding: 32px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
     }
 
     h2 {
-      font-weight: 700;
       color: #2ecc71;
       text-align: center;
-      margin-bottom: 28px;
-      font-size: 22px;
+      margin-bottom: 24px;
     }
 
-    input, select {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+    input, button {
       font-size: 15px;
-      margin-bottom: 14px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 12px;
     }
 
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #fff;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
+    #link { width: 100%; margin-bottom: 12px; }
+
+    .inline {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
-    #generate {
-      background: #2ecc71;
-    }
-    #generate:hover {
-      background: #29b765;
-    }
-
-    #copyAll {
-      background: #16a085;
-    }
-    #copyAll:hover {
-      background: #13856b;
-    }
+    #count { flex: 1; }
+    #generate { flex: 1; background: #2ecc71; color: white; border: none; font-weight: 600; cursor: pointer; }
+    #generate:hover { background: #27ae60; }
 
     #caption-preview {
       white-space: pre-line;
       color: #666;
       font-size: 14px;
-      line-height: 1.5;
-      margin-top: 18px;
+      line-height: 1.6;
+      margin: 10px 0 16px;
       background: #f8f9fa;
       border-radius: 8px;
-      padding: 12px 14px;
+      padding: 10px 14px;
     }
 
-    .comments-wrapper {
-      margin-top: 24px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .comment-card {
+    #result {
+      white-space: pre-line;
       background: #f9fdfb;
       border: 1px solid #e1f5e9;
       border-radius: 10px;
-      padding: 14px 16px;
+      padding: 18px;
+      line-height: 1.8;
       font-size: 15px;
-      color: #222;
-      line-height: 1.6;
-      box-shadow: 0 2px 6px rgba(46, 204, 113, 0.05);
-      opacity: 0;
-      transform: translateY(10px);
-      animation: fadeUp 0.4s ease forwards;
+      min-height: 100px;
+      box-shadow: 0 2px 6px rgba(46,204,113,0.05);
     }
 
-    @keyframes fadeUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    #copyAll {
+      background: #16a085;
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
     }
-
-    .footer {
-      text-align: center;
-      margin-top: 32px;
-      font-size: 13px;
-      color: #999;
-    }
+    #copyAll:hover { background: #13856b; }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>💬 Instagram 댓글 생성기</h2>
-
     <input id="link" placeholder="인스타그램 게시물 링크를 입력하세요" />
-    <select id="count">
-      <option value="3">3개</option>
-      <option value="5">5개</option>
-      <option value="10" selected>10개</option>
-    </select>
-    <button id="generate">댓글 생성하기</button>
+    <div class="inline">
+      <input id="count" type="number" min="1" max="20" placeholder="댓글 수 입력" />
+      <button id="generate">댓글 생성</button>
+    </div>
 
     <div id="caption-preview"></div>
-
-    <div id="result" class="comments-wrapper"></div>
+    <div id="result">결과가 여기에 표시됩니다.</div>
     <button id="copyAll" style="display:none;">모든 댓글 복사</button>
-
-    <div class="footer">
-      © 2025 For:EL AI Comment System
-    </div>
   </div>
 
   <script>
@@ -145,8 +106,8 @@
 
     genBtn.onclick = async () => {
       const link = document.getElementById("link").value.trim();
-      const count = document.getElementById("count").value;
-      resultBox.innerHTML = `<div style="text-align:center; color:#777; padding:20px;">⏳ 댓글 생성 중...</div>`;
+      const count = document.getElementById("count").value || 5;
+      resultBox.textContent = "⏳ 댓글 생성 중...";
       captionBox.textContent = "";
       copyBtn.style.display = "none";
 
@@ -158,27 +119,23 @@
 
       const data = await res.json();
       if (!data.ok) {
-        resultBox.innerHTML = `<div style="color:#e74c3c;">❌ ${data.error}</div>`;
+        resultBox.textContent = "❌ " + data.error;
         return;
       }
 
-      // 캡션 5줄만 표시
+      // 캡션 5줄까지만 표시
       const lines = data.caption.split("\n");
       captionBox.textContent = lines.slice(0, 5).join("\n");
       if (lines.length > 5) captionBox.textContent += "\n...";
 
-      // 댓글 카드 렌더링
-      resultBox.innerHTML = data.comments
-        .map(c => `<div class="comment-card">${c}</div>`)
-        .join("");
+      // 한 칸에 줄바꿈 포함 출력
+      resultBox.textContent = data.comments.join("\n");
 
-      // 복사 버튼 표시
       copyBtn.style.display = "block";
     };
 
     copyBtn.onclick = () => {
-      const comments = Array.from(document.querySelectorAll(".comment-card")).map(el => el.textContent);
-      navigator.clipboard.writeText(comments.join("\n"));
+      navigator.clipboard.writeText(resultBox.textContent);
       alert("✅ 모든 댓글이 복사되었습니다!");
     };
   </script>

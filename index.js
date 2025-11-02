@@ -59,8 +59,9 @@ ${caption}
 
 Rules:
 - Use polite, casual Korean (해요/네요체). No “합니다, 드립니다, 바랍니다.”
-- About half of the comments must have two sentences, not one.
-- Use emojis naturally if it suits the mood.
+- Vary sentence length: about half one sentence, half two sentences.
+- Avoid excessive punctuation or exclamation marks.
+- About 40% of comments may include emojis naturally if it suits the mood.
 `;
 
   const resp = await openai.chat.completions.create({
@@ -70,8 +71,12 @@ Rules:
   });
 
   const text = resp.choices?.[0]?.message?.content?.trim() || '';
-  return text.split(/\r?\n/).filter((line) => line.trim());
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\d+[\).\s-]*/, '').trim()) // 🔹 넘버링 제거
+    .filter(Boolean);
 }
+
 
 // 📌 기본 페이지
 app.get('/', (_req, res) => res.sendFile('index.html', { root: './views' }));

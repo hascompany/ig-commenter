@@ -8,5 +8,6 @@
     "express": "^4.19.2",
     "openai": "^4.56.0",
     "node-fetch": "^3.3.2"
-  }
+  },
+  "engines": { "node": ">=18" }
 }
