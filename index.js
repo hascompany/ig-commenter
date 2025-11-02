@@ -34,7 +34,7 @@ async function fetchCaptionFromInstagram(link) {
   const parts = caption.split(':');
   caption = parts.length > 1 ? parts.slice(1).join(':').trim() : caption.trim();
 
-  // 🔹 HTML 엔티티를 일반 문자로 변환 (여기 추가)
+  // ✅ HTML 엔티티 디코더 (10진수 + 16진수 모두 처리)
   const decode = (str) =>
     str
       .replace(/&quot;/g, '"')
@@ -42,10 +42,14 @@ async function fetchCaptionFromInstagram(link) {
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
-      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
+      // 16진수 &#xXXXX; 형태 처리
+      .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+      // 10진수 &#1234; 형태 처리
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec));
 
   return decode(caption);
 }
+
 
 
 
