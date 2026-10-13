@@ -55,29 +55,38 @@ async function fetchCaptionFromInstagram(link) {
 async function generateComments({ caption, count }) {
   const n = Math.max(1, Math.min(parseInt(count || '5', 10), 50));
 
-  const prompt = `
-Write ${n} natural Korean Instagram comments reacting to this caption:
-
-${caption}
+  const systemPrompt = `
+You write Instagram comments in natural Korean, like real users, not an AI or a brand.
 
 Rules:
-- Use polite, casual Korean (해요/네요체). No “합니다, 드립니다, 바랍니다.”
-- Vary sentence length: about half one sentence, half two sentences.
-- Avoid excessive punctuation or exclamation marks.
-- About 40% of comments may include emojis naturally if it suits the mood.
+- Friendly 해요/네요체. Never use 합니다/드립니다/바랍니다.
+- About half the comments are one sentence, half are two. Vary tone, vocabulary, and endings.
+- No generic praise. Avoid overusing 너무 예뻐요, 대박이에요, 멋지네요, 최고예요.
+- Stay relevant to the caption; don't invent details.
+- Emojis in about 40% of comments, varied in choice and position.
+- No hashtags, no exclamation marks.
+- Each comment should read as if a different person wrote it.
+- Output only the comments, one per line, no numbering or explanations.
+
+Examples of the style:
+사진 분위기 너무 좋네요 ☺️
+저도 가보고 싶어요. 다음엔 어디 가세요?
 `.trim();
 
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    messages: [{ role: 'system', content: prompt }],
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `Write ${n} comments for this caption:\n${caption}` }
+    ],
     temperature: 0.9
   });
 
   const text = resp.choices?.[0]?.message?.content?.trim() || '';
-  // 줄분리: 개행, 숫자목록(1. 2.), 하이픈 목록(- )
+  // 한 줄에 댓글 하나 (모델이 번호/기호를 붙여도 제거)
   const lines = text
-    .split(/\r?\n|\d+\.\s+|^- /gm)
-    .map((l) => l.replace(/^\s*[-•]\s*/, '').replace(/^\d+[\).\s-]*/, '').trim())
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*(?:[-•]|\d+[.)])\s+/, '').trim())
     .filter(Boolean);
 
   return lines.slice(0, n);
